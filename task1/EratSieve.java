@@ -38,10 +38,22 @@ public class EratSieve {
         }
     }
 
+    // BitSet 'sqrtSet' contains bits, that correspond to odd numbers. i.e.:
+    // 0-index bit in BitSet corresponds to number 3,
+    // 1-index -> to 5 etc.
+    // i.e. Number, to which i-index bit corresponds, equals:
+    // 2 * i + 3.
     private volatile BitSet sqrtSet;
     private int sqrtSetSize;
-    private volatile boolean[] rest;
+    // Boolean array 'rest' is used for multithreading only.
+    // Array contains boolean values, that correspond to odd numbers.
+    // Array 'rest' is a continuation of numbers, which sequence starts from 'sqrtSet'.
+    // Number, to which i-index boolean value corresponds, equals:
+    // 2 * (rest.length() + i) + 3.
+    private boolean[] rest;
+    // Value is used for printing primes.
     private int primeOrdinal;
+    // Value stores quantity of primes.
     private int primesQuant;
 
     public void boltAsync(int border, int thrQuant, boolean primesPrintNeeded, boolean performPrintNeeded) {
@@ -59,6 +71,7 @@ public class EratSieve {
         rest = null;
     }
 
+    // Method uses classical algorithm of Eratosthenes sieve.
     public void boltSimple(int border, boolean primesPrintNeeded, boolean performPrintNeeded) {
         if (!borderCorrect(border)) {
             if (performPrintNeeded) {
@@ -90,6 +103,8 @@ public class EratSieve {
         }
     }
 
+    // Method implements post multithreading analyse of 'rest' array, estimates primes quantity,
+    // which are in the 'rest' and prints these values by demand.
     private void analyseRest(long timer, boolean primesPrintNeeded, boolean performPrintNeeded) {
         int restLength = rest.length;
         int loIndex = sqrtSetSize;
@@ -118,6 +133,12 @@ public class EratSieve {
         return border >= 2;
     }
 
+    // Calculates size of container for prime values,
+    // each ordinal element of container corresponds to odd value.
+    // 0-index -> 3,
+    // 1-index ->  5 etc.
+    // i.e. Number, to which i-index element corresponds, equals:
+    // 2 * i + 3.
     private static int calcSizeByBorder(int border) {
         return border % 2 == 0 ? border / 2 - 1 : border / 2;
     }
@@ -134,6 +155,10 @@ public class EratSieve {
         }
     }
 
+    // Divides all the primes, which are in the 'sqrtSet' into equal groups,
+    // which number equals to passed value 'thrQuant'.
+    // For each thread are two values estimated: loIndex and hiIndex, which are the bounds of group.
+    // Each thread implements sieving of 'rest'- array by primes, which are in his group only.
     private List<Thread> destrBetweenThreads(int thrQuant) {
         int sqrtSetPrimesQuant = sqrtSet.cardinality();
         thrQuant = thrQuant > sqrtSetPrimesQuant ? sqrtSetPrimesQuant : thrQuant;
